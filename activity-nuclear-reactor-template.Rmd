@@ -14,6 +14,7 @@ library(tidyverse)
 ```{r}
 #My code here....
 
+#Scrape
 library(rvest)
 
 webpage <- "https://en.wikipedia.org/wiki/List_of_commercial_nuclear_reactors"
@@ -26,6 +27,8 @@ table_list <- webpage %>%
 str(table_list)
 
 japan_reactors <- table_list[[21]]
+
+#examine
 head(japan_reactors)
 View(japan_reactors)
 
@@ -40,16 +43,19 @@ The table is not quite tidy as whats upposed to be the first row is just added v
 
 ```{r}
 #my code here
-#clean
+#remove first row
 japan_reactors <-
   japan_reactors[-1, ] 
 
+#get rid of missing values
 japan_reactors <- japan_reactors %>%
   select(where(~ any(. != "", na.rm = TRUE)))
 
+#get rid of closed variable
 japan_reactors <- 
   japan_reactors[, !(names(japan_reactors) %in% "Closed")]
 
+#got rid of empty cells
 japan_reactors <- japan_reactors %>%
   filter(Model != "" & Beginbuilding != "" & Commercialoperation != "")
 
@@ -66,7 +72,7 @@ ggplot(japan_reactors) +
 
 ```{r}
 #my code here... 
-
+#scrape
 library(rvest)
 
 webpage <- "https://en.wikipedia.org/wiki/List_of_commercial_nuclear_reactors"
@@ -81,19 +87,22 @@ str(table_list)
 china_reactors <- table_list[[10]]
 View(china_reactors)
 
-#clean
+#get rid of first row
 china_reactors <-
   china_reactors[-1, ] 
 
+#get rid of missing data
 china_reactors <- china_reactors %>%
   select(where(~ any(. != "", na.rm = TRUE)))
 
 china_reactors <- china_reactors %>%
   filter(Beginbuilding != "" & Commercialoperation != "")
 
+#merge china and japan
 china_japan_reactors <-
   merge(china_reactors, japan_clean, all = TRUE)
 
+#examine
 View(china_japan_reactors)
 ```
 
@@ -101,27 +110,28 @@ View(china_japan_reactors)
 ## Your Turn: Reconstruct Info Graphic of Japan Reactors (or other country of interest)
 
 ```{r}
+#convert the dates to have the same format
 japan_reactors$Beginbuilding <- 
   as.Date(japan_reactors$Beginbuilding, format = "%d %b %Y")
 japan_reactors$Commercialoperation <- 
   as.Date(japan_reactors$Commercialoperation, format = "%d %b %Y")
 
-library(lubridate)
-
-japan_reactors$TimeOfOperation <- interval(japan_reactors$Beginbuilding, japan_reactors$Commercialoperation)
-
+#create new variable that uses the reactor name with its respective unite ID
 japan_reactors$PlantID <- 
   paste(as.character(japan_reactors$Plantname), as.character(japan_reactors$UnitNo.), sep = " ")
 
+#make a start and an end for plot points
 japan_reactors <- japan_reactors %>%
   mutate(StartDate = as.Date(Beginbuilding),
          EndDate = as.Date(Commercialoperation))
   
+#gets only the top half of the reactors to plot
 top_half_reactors <-
   japan_reactors[1:(nrow(japan_reactors)/2), ]
 
 head(top_half_reactors)
 
+#plot
 ggplot(top_half_reactors) +
   geom_segment(aes(x = StartDate, xend = EndDate, y = PlantID, yend = PlantID, size = Status, color = Type)) +
   scale_fill_hue(direction = 1) +
