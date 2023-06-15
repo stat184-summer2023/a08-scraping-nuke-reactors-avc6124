@@ -1,6 +1,6 @@
 ---
 title: "Activity: Nuclear Reactors"
-author: "YOUR NAME HERE"
+author: "Alvin Chen"
 output: html_notebook
 ---
 
@@ -12,22 +12,52 @@ library(tidyverse)
 ## Scrape the Data 
 
 ```{r}
-#My code here.... 
+#My code here....
 
+library(rvest)
+
+webpage <- "https://en.wikipedia.org/wiki/List_of_commercial_nuclear_reactors"
+
+table_list <- webpage %>%
+  read_html(header = TRUE) %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+
+str(table_list)
+
+japan_reactors <- table_list[[21]]
+head(japan_reactors)
+View(japan_reactors)
 
 ```
 
 
 ## Your turn: In what ways is the table tidy? How is it not tidy? What’s different about it from a tidy table?
 
-My answer here..... 
-
+The table is not quite tidy as whats upposed to be the first row is just added variables to the data set. The column headers are not clear to understand. There are some cases with missing values. 
 
 ## Your Turn: Plot Net Generation Capacity vs Construction Date
 
 ```{r}
-#my code here 
+#my code here
+#clean
+japan_reactors <-
+  japan_reactors[-1, ] 
 
+japan_reactors <- japan_reactors %>%
+  select(where(~ any(. != "", na.rm = TRUE)))
+
+japan_reactors <- 
+  japan_reactors[, !(names(japan_reactors) %in% "Closed")]
+
+japan_reactors <- japan_reactors %>%
+  filter(Model != "" & Beginbuilding != "" & Commercialoperation != "")
+
+#plot
+ggplot(japan_reactors) +
+  geom_tile(aes(x = `Capacity(MW)`, y = Beginbuilding)) +
+  xlab("Net Generation Capacity") +
+  ylab("Construction Date")
 
 ```
 
@@ -37,13 +67,68 @@ My answer here.....
 ```{r}
 #my code here... 
 
-```
+library(rvest)
 
+webpage <- "https://en.wikipedia.org/wiki/List_of_commercial_nuclear_reactors"
+
+table_list <- webpage %>%
+  read_html(header = TRUE) %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+
+str(table_list)
+
+china_reactors <- table_list[[10]]
+View(china_reactors)
+
+#clean
+china_reactors <-
+  china_reactors[-1, ] 
+
+china_reactors <- china_reactors %>%
+  select(where(~ any(. != "", na.rm = TRUE)))
+
+china_reactors <- china_reactors %>%
+  filter(Beginbuilding != "" & Commercialoperation != "")
+
+china_japan_reactors <-
+  merge(china_reactors, japan_clean, all = TRUE)
+
+View(china_japan_reactors)
+```
 
 
 ## Your Turn: Reconstruct Info Graphic of Japan Reactors (or other country of interest)
 
 ```{r}
-#My code here
+japan_reactors$Beginbuilding <- 
+  as.Date(japan_reactors$Beginbuilding, format = "%d %b %Y")
+japan_reactors$Commercialoperation <- 
+  as.Date(japan_reactors$Commercialoperation, format = "%d %b %Y")
+
+library(lubridate)
+
+japan_reactors$TimeOfOperation <- interval(japan_reactors$Beginbuilding, japan_reactors$Commercialoperation)
+
+japan_reactors$PlantID <- 
+  paste(as.character(japan_reactors$Plantname), as.character(japan_reactors$UnitNo.), sep = " ")
+
+japan_reactors <- japan_reactors %>%
+  mutate(StartDate = as.Date(Beginbuilding),
+         EndDate = as.Date(Commercialoperation))
+  
+top_half_reactors <-
+  japan_reactors[1:(nrow(japan_reactors)/2), ]
+
+head(top_half_reactors)
+
+ggplot(top_half_reactors) +
+  geom_segment(aes(x = StartDate, xend = EndDate, y = PlantID, yend = PlantID, size = Status, color = Type)) +
+  scale_fill_hue(direction = 1) +
+  theme_minimal() +
+  xlab('operation') +
+  ylab('reactorID')
+
+
 
 ```
