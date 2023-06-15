@@ -66,7 +66,7 @@ ggplot(japan_reactors) +
   ylab("Construction Date")
 
 ```
-
+Observations: In looing at the plotted data, there seems to be a wide range of generation cpacity and no general trend throughtout the data. There are more reactors with lower capactity than there are that can hold more.
 
 ## Your Turn: Scrape & Clean China Data (then merge with Japan)
 
@@ -106,7 +106,7 @@ china_japan_reactors <-
 View(china_japan_reactors)
 ```
 
-
+Observations: China has more PWR type nuclear reactors than Japan. A lot of japan's reactors are under review or shut down, while china has mostly operational reactors and ones that are under construction.
 ## Your Turn: Reconstruct Info Graphic of Japan Reactors (or other country of interest)
 
 ```{r}
@@ -142,3 +142,4 @@ ggplot(top_half_reactors) +
 
 
 ```
+Observations: From 1970-1995 Japan has more reacters compared to any time past 2000's. The majority of Japan's reactors are type BWR. And a lot of their reactors are shut down with others are under review.
